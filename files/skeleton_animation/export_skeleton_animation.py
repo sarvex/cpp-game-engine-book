@@ -102,7 +102,7 @@ for i in range(0, len(bpy.context.visible_pose_bones)):
     engineAnimation.bonesChildren[engineAnimation.get_bone_index(bone.name)] = []
     for child in bone.children:
         engineAnimation.bonesChildren[engineAnimation.get_bone_index(bone.name)].append(engineAnimation.get_bone_index(child.name))
-        
+
 print("---------- EXPORT T-POS ------------")
 engineAnimation.boneTPoses = [None] * len(bpy.context.visible_pose_bones)
 
@@ -112,14 +112,14 @@ for i in range(0, len(bpy.context.visible_pose_bones)):
     engineAnimation.boneTPoses[engineAnimation.get_bone_index(bone.name)]=EngineMatrix(matrix_local)
 
 print("---------- EXPORT FRAME ------------")
-print("bpy.context.scene.frame_start:"+str(bpy.context.scene.frame_start))
-print("bpy.context.scene.frame_end:"+str(bpy.context.scene.frame_end))
+print(f"bpy.context.scene.frame_start:{str(bpy.context.scene.frame_start)}")
+print(f"bpy.context.scene.frame_end:{str(bpy.context.scene.frame_end)}")
 engineAnimation.frames = [None] * (bpy.context.scene.frame_end - bpy.context.scene.frame_start + 1)
 
 frame_index = 0
 for frame in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 1):
     bpy.context.scene.frame_set(frame)
-    print("---------- FRAME:"+str(frame))
+    print(f"---------- FRAME:{str(frame)}")
 
     engineAnimation.frames[frame_index] = [None] * len(bpy.context.visible_pose_bones)
     for i in range(0, len(bpy.context.visible_pose_bones)):
@@ -131,10 +131,12 @@ for frame in range(bpy.context.scene.frame_start, bpy.context.scene.frame_end + 
 
 print("---------- WRITE FILE ------------")
 blender_project_dir = os.path.dirname(bpy.data.filepath)
-if os.path.exists(blender_project_dir+"/export")==False:
-    os.mkdir(blender_project_dir+"/export")
+if os.path.exists(f"{blender_project_dir}/export") == False:
+    os.mkdir(f"{blender_project_dir}/export")
 
-engineAnimation.write_to_file(blender_project_dir+"/export/export.skeleton_anim")
+engineAnimation.write_to_file(
+    f"{blender_project_dir}/export/export.skeleton_anim"
+)
 
 print("---------- EXPORT SUCCESS ------------")
 

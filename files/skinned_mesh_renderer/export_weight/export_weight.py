@@ -19,9 +19,17 @@ class EngineVertex:
         self.v=v
     
     def __eq__(self,other):
-        equal= self.x==other.x and self.y==other.y and self.z==other.z and self.r==other.r and \
-            self.g==other.g and self.b==other.b and self.a==other.a and self.u==other.u and self.v==other.v
-        return equal
+        return (
+            self.x == other.x
+            and self.y == other.y
+            and self.z == other.z
+            and self.r == other.r
+            and self.g == other.g
+            and self.b == other.b
+            and self.a == other.a
+            and self.u == other.u
+            and self.v == other.v
+        )
 
     def __str__(self) -> str:
         return "x:{:.2f},y:{:.2f},z:{:.2f},r:{:.2f},g:{:.2f},b:{:.2f},a:{:.2f},u:{:.2f},v:{:.2f}".format(self.x,self.y,self.z,self.r,self.g,self.b,self.a,self.u,self.v)
@@ -50,7 +58,7 @@ class VertexRelateBoneInfo:
         self.bone_weight=[-1,-1,-1,-1]
 
     def __str__(self):
-        return "bone_index:{},bone_weight:{}".format(self.bone_index,self.bone_weight)
+        return f"bone_index:{self.bone_index},bone_weight:{self.bone_weight}"
 
     def __repr__(self):
         return str(self)
@@ -104,7 +112,7 @@ for poly in mesh_selected.polygons:#遍历多边形
     if poly.loop_total==4:
         ShowMessageBox("Need Triangle","Polygon Error",  'ERROR')
         break
-    
+
     # 遍历一个多边形的3个顶点，注意这里的loop_index是包含重复顶点的顶点数组的index，是以三角形为单位*3作为顶点总数，并不是实际顶点的index。
     # 例如第一个三角形就是0 1 2，第二个三角形就是 3 4 5。是包含重复顶点的。
     for loop_index in range(poly.loop_start + poly.loop_total-1,poly.loop_start-1,-1):
@@ -113,14 +121,15 @@ for poly in mesh_selected.polygons:#遍历多边形
         uv=uv_layer[loop_index].uv
 
         engine_vertex=EngineVertex(vertex.co.x,vertex.co.z,vertex.co.y,1,1,1,1,uv.x,uv.y)#构造引擎顶点，注意 y z调换
-        
-        #判断顶点是否存在
-        find_engine_vertex_index=-1
-        for engine_vertex_index in range(len(engine_vertexes)):
-            if engine_vertexes[engine_vertex_index]==engine_vertex:
-                find_engine_vertex_index=engine_vertex_index
-                break
-        
+
+        find_engine_vertex_index = next(
+            (
+                engine_vertex_index
+                for engine_vertex_index in range(len(engine_vertexes))
+                if engine_vertexes[engine_vertex_index] == engine_vertex
+            ),
+            -1,
+        )
         if find_engine_vertex_index<0:
             find_engine_vertex_index=len(engine_vertexes)
             engine_vertexes.append(engine_vertex)
@@ -139,12 +148,12 @@ for poly in mesh_selected.polygons:#遍历多边形
                     vertex_relate_bone_info.bone_index[group_index]=bone_index
                     vertex_relate_bone_info.bone_weight[group_index]=group.weight
                 else:
-                    print("\033[31mError: group name {} not in bone names.\033[0m".format(group_name))
+                    print(f"\033[31mError: group name {group_name} not in bone names.\033[0m")
             # print(vertex_relate_bone_info)
             engine_vertex_relate_bone_infos.append(vertex_relate_bone_info)
-            
+
         engine_vertex_indexes.append(find_engine_vertex_index)#把index放入顶点索引表
-        
+
 print(engine_vertexes)
 print(engine_vertex_indexes)
 print(*engine_vertex_relate_bone_infos,sep='\n')
@@ -153,18 +162,18 @@ print("----------- CHECK EXPORT DIR ---------")
 
 # 检查目录 export 是否存在，不存在则创建
 blender_project_dir = os.path.dirname(bpy.data.filepath)
-if os.path.exists(blender_project_dir+"/export")==False:
-    os.mkdir(blender_project_dir+"/export")
+if os.path.exists(f"{blender_project_dir}/export") == False:
+    os.mkdir(f"{blender_project_dir}/export")
 
 print("----------- WRITE MESH FILE ---------")
 
 # 将顶点数据写入 export.mesh 文件
-with open(blender_project_dir+"/export/export.mesh", 'wb') as f:
+with open(f"{blender_project_dir}/export/export.mesh", 'wb') as f:
     #写入文件头
     f.write("mesh".encode())
     f.write(struct.pack('H',len(engine_vertexes)))
     f.write(struct.pack('H',len(engine_vertex_indexes)))
-    
+
     #写入顶点数据
     for engine_vertex in engine_vertexes:
         engine_vertex.write(f)
@@ -173,20 +182,20 @@ with open(blender_project_dir+"/export/export.mesh", 'wb') as f:
     kVertexIndexVectorInverse=engine_vertex_indexes[::-1]
     for engine_vertex_index in kVertexIndexVectorInverse:
         f.write(struct.pack('H',engine_vertex_index))
-    
+
     f.close()
 
 print("----------- WRITE WEIGHT FILE ---------")
-    
+
 # 将权重数据写入 export.weight 文件
-with open(blender_project_dir+"/export/export.weight", 'wb') as f:
+with open(f"{blender_project_dir}/export/export.weight", 'wb') as f:
     #写入文件头
     f.write("weight".encode())
 
     #写入顶点关联骨骼信息(4个骨骼索引、权重)，长度为顶点数。
     for vertex_relate_bone_info in engine_vertex_relate_bone_infos:
         vertex_relate_bone_info.write(f)
-    
+
     f.close()
-    
+
 print("----------- SUCCESS --------------")

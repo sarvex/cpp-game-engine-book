@@ -10,8 +10,7 @@ reg = re.compile(r'^\s*#define\s+SPDLOG_VER_([A-Z]+)\s+([0-9]+).*$')
 
 with open(config_h, 'r') as fp:
     for l in fp:
-        m = reg.match(l)
-        if m:
-            data[m.group(1)] = int(m.group(2))
+        if m := reg.match(l):
+            data[m[1]] = int(m[2])
 
 print(f"{data['MAJOR']}.{data['MINOR']}.{data['PATCH']}")

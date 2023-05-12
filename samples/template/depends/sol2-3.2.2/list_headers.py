@@ -19,20 +19,14 @@ endif_cpp = re.compile(r'#endif // SOL_.*?_HPP')
 
 
 def get_include(line, base_path):
-	local_match = local_include.match(line)
-	if local_match:
-		# local include found
-		full_path = os.path.normpath(
-		    os.path.join(base_path, local_match.group(2))).replace(
-		        '\\', '/')
-		return full_path
-	project_match = project_include.match(line)
-	if project_match:
-		# local include found
-		full_path = os.path.normpath(
-		    os.path.join(base_path, project_match.group(2))).replace(
-		        '\\', '/')
-		return full_path
+	if local_match := local_include.match(line):
+		return os.path.normpath(
+			os.path.join(base_path, local_match.group(2))
+		).replace('\\', '/')
+	if project_match := project_include.match(line):
+		return os.path.normpath(
+			os.path.join(base_path, project_match.group(2))
+		).replace('\\', '/')
 	return None
 
 
@@ -69,10 +63,7 @@ def process_file(filename):
 			# get relative directory
 			base_path = os.path.dirname(filename)
 
-			# see if it's an include file
-			name = get_include(line, base_path)
-
-			if name:
+			if name := get_include(line, base_path):
 				process_file(name)
 				continue
 
